@@ -1,3 +1,15 @@
+"""
+thesis.detection
+~~~~~~~~~~~~~~~~~
+
+Multi-Template Multi-Match Dynamic Time Warping
+
+:author: Mats Fockaert
+:copyright: Copyright 2023 KU Leuven
+:license: Apache License, Version 2.0, see LICENSE for details.
+
+"""
+
 import numpy as np
 from numba import njit
 from numba.typed import List
@@ -21,6 +33,18 @@ def update_progress(pbar, start, end, beta, multiplier=1):
     pbar.update(removed)
 
 def calc_non_inf_vector_magnitude(tests, tempsLen):
+    """
+    Given a list of TimeSeries, returns True if the maximum gap between consecutive sub-sequences 
+    of the TimeSeries containing finite values is larger than the length of the template, 
+    False otherwise.
+
+    Args:
+    - tests: a list of TimeSeries where each TimeSeries is a list of lists of np.float.
+    - tempsLen: a list of integers representing the length of each template.
+
+    Returns:
+    - True if the maximum gap between consecutive sub-sequences of the TimeSeries containing finite values is larger than the length of the template, False otherwise.
+    """
     for idx, test in enumerate(tests):
         idxInf = []
         

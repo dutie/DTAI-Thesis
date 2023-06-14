@@ -1,3 +1,15 @@
+"""
+thesis.loading
+~~~~~~~~~~~~~~~~~
+
+Loading the data of the dataset "Yurtman,Aras & Barshan,Billur. (2022). Physical Therapy Exercises Dataset. UCI Machine Learning Repository."
+
+:author: Mats Fockaert
+:copyright: Copyright 2023 KU Leuven
+:license: Apache License, Version 2.0, see LICENSE for details.
+
+"""
+
 import numpy as np
 import os
 import matplotlib.pyplot as plt
@@ -27,6 +39,11 @@ class Loading:
         return [temp1, temp2, temp3]
 
     def load_all(self):
+        """
+        Sets `self.time_series` to have a list of subjects that each have a list of exercises that each have a list of sensors that each have their templates and test time series.
+
+        `self.time_series: list[subject_type]`.
+        """
         template_times = None
         for dirpath, dirnames, filenames in os.walk(self.home_folder, topdown=True):
             for filename in filenames:
@@ -80,10 +97,14 @@ class Loading:
         return self.time_series[subject-1]
             
     def get_relevant_data_only(self):
+        """
+        Each exercise has one main sensor that will be most prevelant to the exercise. This sensor is selected and returned.
+
+        returns List[List[List[templates_type, test_type]]]
+        """
         updated_subjects = []
         exercises = np.arange(8)
         sensors   = [1,3,1,1,1,1,1,1]
-        sensor_for_exercise = list(zip(exercises, sensors))
         for subject in self.time_series:
             tdata = subject[exercises]
             data  = []

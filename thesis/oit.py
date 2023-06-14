@@ -5,8 +5,8 @@ thesis.oit
 Orientation Invariant Techniques
 
 :author: Mats Fockaert
-:copyright: ...
-:license: ...
+:copyright: Copyright 2023 KU Leuven
+:license: Apache License, Version 2.0, see LICENSE for details.
 
 """
 
@@ -24,6 +24,19 @@ exercise_type  = list[sensor_type]
 subject_type   = list[exercise_type]
 
 def norm(A: test_type) -> magnitude_type:
+    """
+    Euclidean Norm.
+    
+    This function returns the transformed time series. It is transformed using the Euclidean Norm, thus returning a 1-D TimeSeries.
+    
+    For a vector $\vec{v} \in \mathbb{R}^n$, it is computed using the following formula:
+    $||\vec{v}||_2 := \sqrt{\vec{v} \dot \vec{v}} = \sqrt{v_0^2 + v_1^2 + \dots v_n^2}$
+    
+    :param A: To be transformed time series.
+    
+    Returns: Transformed time series as a `magnitude_type`.
+    
+    """
     return [np.linalg.norm(vec) for vec in A]
 
 @njit
@@ -44,9 +57,19 @@ def svd(A: test_type) -> test_type:
     return (U.T @ A).T
 
 def make_robust_absolute(A_I):
+    """
+    
+    Element-wise operation of making each vector positive in `A_I`.
+
+    """
     return np.absolute(A_I)
 
 def usvd_abs(A: test_type) -> test_type:
+    """ SVD based OIT with `absolute` method for robustness to the sign ambiguity of SVD.
+    
+    Uses :meth:`make_robust_absolute(A_I)` to make the SVD-based OIT transformation of `A` robust to the sign ambiguity of SVD.
+
+    """
     M, N = A.shape
     if M != 3:
         A = A.T
@@ -55,6 +78,14 @@ def usvd_abs(A: test_type) -> test_type:
     return robU.T
 
 def make_robust_skewness(U, matrix):
+    """
+    
+    Using left-singular vectors `U` and the original matrix `matrix`, that describe the new space of the SVD transformation, and their skewness to decide how to flip the sign. This makes SVD unique.
+
+    returns unique `U`.
+
+
+    """
     u1, u2, _ = U.T
     if skew(u1 @ matrix) < 0:
         u1 = -u1
@@ -63,6 +94,11 @@ def make_robust_skewness(U, matrix):
     u3 = np.cross(u1, u2)
     return np.vstack((u1, u2, u3))
 def usvd_skew(A: test_type) -> test_type:
+    """ SVD based OIT with `skewness` method for uniqueness.
+
+    Uses :meth:`make_robust_skewness(U, matrix)` to make the SVD-based OIT transformation of `A` unique.
+    
+    """
     M, N = A.shape
     if M != 3:
         A = A.T
@@ -71,6 +107,14 @@ def usvd_skew(A: test_type) -> test_type:
     return (robU @ A).T
 
 def make_robust_mean(U, matrix):
+    """
+    
+    Using left-singular vectors `U` and the original matrix `matrix`, that describe the new space of the SVD transformation, and their mean to decide how to flip the sign. This makes SVD unique.
+
+    returns unique `U`.
+
+
+    """
     u1, u2, _ = U.T
     if mean(u1 @ matrix) < 0:
         u1 = -u1
@@ -80,6 +124,11 @@ def make_robust_mean(U, matrix):
     return np.vstack((u1, u2, u3))
 
 def usvd_mean(A: test_type) -> test_type:
+    """ SVD based OIT with `mean` method for uniqueness.
+
+    Uses :meth:`make_robust_mean(U, matrix)` to make the SVD-based OIT transformation of `A` unique.
+    
+    """
     M, N = A.shape
     if M != 3:
         A = A.T
@@ -117,6 +166,11 @@ def slide_window(time_series: list[list[float]], window_size: int) -> list[list[
 
 @njit
 def wsvd(time_series, window_size):
+    """
+    
+    Uses :meth:`slide_window(time_series, window_size)` to create all possible windows/ranges in the :param:`time_series` given the :param:`window_size`. It will then perform :meth:`svd(A)` on each window and update the current middlepoint to the transformed point. 
+    
+    """
     windows = slide_window(time_series, window_size)
     wsvd_time_series = np.zeros(time_series.shape)
     for idw, window in enumerate(windows):
@@ -128,6 +182,11 @@ def wsvd(time_series, window_size):
     return wsvd_time_series
 
 def wusvd_absolute(time_series, window_size):
+    """
+
+    Similar to :meth:`wsvd(time_series, window_size)`, but here :meth:`usvd_abs(A)` is applied to each window instead of :meth:`svd(A)`. 
+    
+    """
     windows = slide_window(time_series, window_size)
     wusvd_time_series = np.zeros(time_series.shape)
     for idw, window in enumerate(windows):
@@ -140,6 +199,11 @@ def wusvd_absolute(time_series, window_size):
 
 
 def wusvd_skew(time_series, window_size):
+    """
+
+    Similar to :meth:`wusvd_absolute(time_series, window_size)`, but here :meth:`usvd_skew(A)` is applied to each window. 
+    
+    """
     windows = slide_window(time_series, window_size)
     wusvd_time_series = np.zeros(time_series.shape)
     for idw, window in enumerate(windows):
@@ -151,6 +215,11 @@ def wusvd_skew(time_series, window_size):
     return wusvd_time_series
 
 def wusvd_mean(time_series, window_size):
+    """
+
+    Similar to :meth:`wusvd_skew(time_series, window_size)`, but here :meth:`usvd_mean(A)` is applied to each window. 
+    
+    """
     windows = slide_window(time_series, window_size)
     wsvd_time_series = np.zeros(time_series.shape)
     for idw, window in enumerate(windows):
